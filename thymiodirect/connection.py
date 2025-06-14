@@ -3,6 +3,9 @@
 # Miniature Mobile Robots group, Switzerland
 # Author: Yves Piguet
 #
+# Copyright 2025 Massimo Guarnieri
+# Changes: added support for invocation of Thymio native functions
+#
 # SPDX-License-Identifier: BSD-3-Clause
 
 """
@@ -670,6 +673,22 @@ class Connection:
         with self.input_lock:
             node.set_var_array(name, val)
         self.set_variables(target_node_id, node.var_offset[name], val)
+		
+	# Changed by: Massimo Guarnieri, 2025-06-12
+	# Change: added functions to set variables in the user data space
+    def set_user_var(self, target_node_id, index, val):
+        """Set the value of a user variable in the local copy and send it.
+        """
+        node = self.remote_nodes[target_node_id]
+        offset = len(node.var_data) + index
+        self.set_variables(target_node_id, offset, [val])
+
+    def set_user_var_array(self, target_node_id, index, val):
+        """Set the value of a user variable in the local copy and send it.
+        """
+        node = self.remote_nodes[target_node_id]
+        offset = len(node.var_data) + index
+        self.set_variables(target_node_id, offset, val)
 
     def __getitem__(self, key):
         class Node:

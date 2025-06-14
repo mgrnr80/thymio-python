@@ -3,6 +3,9 @@
 # Miniature Mobile Robots group, Switzerland
 # Author: Yves Piguet
 #
+# Copyright 2025 Massimo Guarnieri
+# Changes: added support for invocation of Thymio native functions
+#
 # SPDX-License-Identifier: BSD-3-Clause
 
 """
@@ -214,6 +217,46 @@ class Thymio:
                         self.thymio_proxy.connection.set_var(self_node.node_id, name, val)
                 except KeyError:
                     raise KeyError(name)
+
+		
+			# Changed by: Massimo Guarnieri, 2025-06-12
+			# Change: added functions to invoke native functions to power leds
+            def set_user_var(self_node, index, val):
+                """Set a variable using its index.
+                """
+                try:
+                    if isinstance(val, list):
+                        self.thymio_proxy.connection.set_user_var_array(self_node.node_id, index, val)
+                    else:
+                        self.thymio_proxy.connection.set_user_var(self_node.node_id, index, val)
+                except KeyError:
+                    raise KeyError(index)
+
+            def invoke_native_function(self_node, nf_name, args):
+                """Invoke a native function by name with a list of arguments.
+                """
+                # find nf_name in native functions
+                native_functions = self.thymio_proxy.connection.remote_nodes[self_node.node_id].native_functions
+                if nf_name not in native_functions:
+                    raise KeyError(f"native function '{nf_name}' not found")
+                nf_id = native_functions.index(nf_name)
+                payload = [nf_id, len(args)] + args + [0, 1]
+                self_node.set_user_var(0, payload)
+
+            def set_leds_top(self_node, val):
+                """Set the top LEDs using a list of 3 values.
+                """
+                self_node.invoke_native_function("leds.top", val)
+
+            def set_leds_bottom_left(self_node, val):
+                """Set the bottom left LEDs using a list of 3 values.
+                """
+                self_node.invoke_native_function("leds.bottom.left", val)
+
+            def set_leds_bottom_right(self_node, val):
+                """Set the bottom right LEDs using a list of 3 values.
+                """
+                self_node.invoke_native_function("leds.bottom.right", val)
 
         return Node(key)
 
